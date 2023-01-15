@@ -1,0 +1,3 @@
+module diceapplication {
+    requires dicedatastructures;
+}

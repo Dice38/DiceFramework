@@ -1,0 +1,3 @@
+module dicedatastructures {
+    exports dataalgorithms;
+}
