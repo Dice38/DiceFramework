@@ -3,6 +3,7 @@ package datalists;
 import datacomponents.AccessType;
 import datacomponents.DiceAbstractCollection;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
@@ -309,13 +310,88 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
      */
     private class ListIter implements ListIterator<T>{
         //Attributes
-        private int cursor = 0;
+        private Cursor cursor;
+        //Mod Count
+        private int expectedModCount;
 
-
-        public boolean hasNext(){
-            return this.cursor < ArrayList.this.size();
+        //Constructors
+        public ListIter(){
+            this(0);
+        }
+        public ListIter(int startIndex){
+            ArrayList.this.checkIndexRange(startIndex);
+            this.cursor = new Cursor(startIndex -1, startIndex);
+            this.expectedModCount = ArrayList.this.modCount.get();
         }
 
+        //Methods
+
+        public boolean hasNext(){
+            return this.cursor.nextIndex < ArrayList.this.size();
+        
+        }
+
+        public boolean hasPrevious(){
+            return this.cursor.getPreviousIndex() > -1;
+        }
+
+        public T next(){
+            if(!this.hasNext()) throw new NoSuchElementException("The Collection has no next Element");
+
+            this.cursor.moveForward();
+
+            return ArrayList.this.get(cursor.getPreviousIndex());
+        }
+        
+        public int nextIndex(){
+            return this.cursor.getNextIndex();
+        }
+
+        public T previous(){
+            if(!this.hasPrevious()) throw new NoSuchElementException("The Collection has no previous Element");
+
+            this.cursor.moveBackward();
+
+            return ArrayList.this.get(cursor.getNextIndex());
+        }
+
+        public int previousIndex(){
+            return this.cursor.getPreviousIndex();
+        }
+
+        /*
+         * Internal Cursor Class that saves both the previous and the succeeding position
+         */
+        private class Cursor{
+            //Attributes
+            private int previousIndex;
+            private int nextIndex;
+
+            //Cunstructor
+            public Cursor(int previousIndex, int nextIndex){
+                this.previousIndex = previousIndex;
+                this.nextIndex = nextIndex;
+            }
+
+            //Method
+            public void moveForward(){
+                this.previousIndex++;
+                this.nextIndex++;
+            }
+
+            public void moveBackward(){
+                this.previousIndex--;
+                this.nextIndex--;
+            }
+
+            public int getNextIndex(){
+                return this.nextIndex;
+            }
+
+            public int getPreviousIndex(){
+                return this.previousIndex;
+            }
+        }
     }
 
 }
