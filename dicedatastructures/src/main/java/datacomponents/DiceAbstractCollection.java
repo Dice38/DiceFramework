@@ -45,15 +45,11 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
 
     /*
     REMOVAL METHODS!
-    Removal Operations that make use of the datastructures iterator.remove() operation. The iterator
-    is implemented specifically for each datastructure.
      */
+    public abstract void clear();
+
     public abstract boolean remove(Object obj);
 
-    /*
-    The following removal methods make use of the specified remove(Object) Method, as that method checks each passed Object
-    for null references and uses the saver iterator implementation.
-     */
     /**
      * Removes all the instances of all the elements in the collection from the ArrayList.
      * @param collection collection containing elements to be removed from this collection
@@ -102,7 +98,6 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
 
     /*
     MODIFYING METHODS!
-    Methods that modify the elements of the Datastructure
      */
 
     /**
@@ -121,9 +116,21 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
     public abstract void replaceIf(UnaryOperator<T> operator, Predicate<T> filter);
 
     /*
-    Methods that don't modify the datastructure and generally return some information to the caller
+    OTHER METHODS!
      */
+    public abstract T get(int index);
 
+    public T[] getAll(Predicate<T> filter){
+        T[] resultArray = this.castTypeArray(this.size());
+        int i = 0;
+
+        for(T value: this){
+            if(filter.test(value)){
+                resultArray[i++] = value;
+            }
+        }
+        return resultArray;
+    }
     /**
      * Searches for an Object in O(n) linear search
      * @param obj element whose presence in this collection is to be tested
@@ -166,12 +173,30 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
      * Checks if the datastructure contains zero elements
      * @return true if there are zero elements in the datastructure.
      */
-    public abstract boolean isEmpty();
+    public boolean isEmpty(){
+        return this.size() == 0;
+    }
 
     /**
      * Returns all the values in the datastructure sequentially as a string. It is convention that each value is separated
      * by "," and " ".
      * @return
      */
-    public abstract String toString();
+    public String toString(){
+        var stringBuilder = new StringBuilder();
+        for(T value:this){
+            stringBuilder.append(value.toString() + ", ");
+        }
+
+        return stringBuilder.toString();
+    }
+
+    /**
+     * Internal Methods
+     */
+    @SuppressWarnings ("unchecked")
+    protected T[] castTypeArray(int size){
+    
+        return (T[]) new Object[size];
+    }
 }
