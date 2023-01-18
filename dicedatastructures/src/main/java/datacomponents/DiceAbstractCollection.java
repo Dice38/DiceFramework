@@ -227,7 +227,7 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
      */
     @SuppressWarnings ("unchecked")
     protected T[] castTypeArray(int size){
-        if(size<0) throw new IllegalArgumentException("Passed Array Capacity is smaller than zero");
+        if(size<1) throw new IllegalArgumentException("Passed Array Capacity is smaller than one");
     
         return (T[]) new Object[size];
     }
@@ -241,13 +241,6 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
      * Extension of the Iterator interface that provides additional Functionality. Used for functionality in all DiceDataStructures within the framework.
      */
         public interface DiceIterator<T> extends Iterator<T>{
-
-        public abstract boolean hasNext();
-
-        public abstract T next();
-
-        public abstract void remove();
-
         /**
          * Method that modifies the current Element with the operation specified
          * @param operation The operation applied to the last element returned by next()

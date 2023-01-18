@@ -22,7 +22,7 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
     /*
     Constructors
      */
-    public ArrayList(int initialCapacity){this.baseArray = this.castArray(initialCapacity);}
+    public ArrayList(int initialCapacity){this.baseArray = this.castTypeArray(initialCapacity);}
 
     public ArrayList(){this(defaultInitialCapacity);}
 
@@ -47,20 +47,27 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
     offeres random access the base adding method is not add(T value) but add(index, value).
      */
     public boolean add(int index, T value){
-        if(index > this.size || index < 0) throw new IndexOutOfBoundsException("Index out of bounds at " +index);
+        this.checkIndexRange(index);
+
+        for(int i = this.size+1; i > index; i-- ){
+            this.baseArray[i] = this.baseArray[i-1];
+        }
 
         this.baseArray[index] = value;
-
-        if(index == this.size){
-            this.size++;
-        }
-        this.modCount.incrementAndGet();
+        this.size++;
         this.resize();
+        this.modCount.incrementAndGet();
+
         return true;
     }
 
     public boolean add(T value){
-        return this.add(this.size, value);
+        this.baseArray[this.size()] = value;
+        this.size++;
+        this.resize();
+        this.modCount.incrementAndGet();
+
+        return true;
     }
 
     /*
@@ -116,6 +123,14 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
         return bFlag;
     }
 
+    public boolean replaceAt(int index, T value){
+        this.checkIndexRange(index);
+
+        this.baseArray[index] = value;
+        this.modCount.incrementAndGet();
+        return true;
+    }
+
     /*
     Non-Modifying Methods that don't change the ArrayList @
      */
@@ -141,7 +156,11 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
      * @return Returns Iterator Object for the current Collection. Fail-Fast
      */
     public Iterator<T> iterator(){
-        return new Iter();
+        return new ListIter();
+    }
+
+    public DiceIterator<T> diceIterator(){
+        return new ListIter();
     }
 
     /**
@@ -219,75 +238,18 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
         if(index < 0 || index >= this.size) throw new IndexOutOfBoundsException("Index out of Bound at "+index);
     }
 
-    //Iterators
-    /*
-    Internal Iterator implementation
-     */
-    private class Iter implements DiceIterator<T> {
-
-        //Attributes
-        /*
-        Initially the Cursor points at -1, then at each subsequent ArrayField. At the end of the iteration it points to
-        size-1.
-         */
-        private int cursor;
-        private int expectedModCount;
-        //Constructor
-        private Iter(int startIndex){
-            checkIndexRange(startIndex);
-            this.cursor = startIndex-1;
-            this.expectedModCount = ArrayList.this.modCount.get();
-        }
-        private Iter(){this(0);}
-
-        //Methods
-        @Override
-        public boolean hasNext() {
-            return cursor < size;
-        }
-
-        @Override
-        public T next() {
-            this.checkModification();
-            if(hasNext()) {
-                return baseArray[++cursor];
-            }else{
-                throw new NoSuchElementException("End of list reached");
-            }
-        }
-
-        @Override
-        public void remove() {
-            ArrayList.this.remove(cursor);
-            cursor--;
-            this.expectedModCount++;
-        }
-        /*
-        Checks the if the List has been modified in an unchecked manner while the Iterator is active.
-        Compares the expected Modification count with the current modCount.
-         */
-        private void checkModification(){
-            if(this.expectedModCount != ArrayList.this.modCount.get())
-                throw new ConcurrentModificationException("ArrayList has been Modified");
-
-        }
-        /*
-        Performs the Action specified in Consumer on all remaining elements of that Iterator
-         */
-        @Override
-        public void forEachRemaining(Consumer<? super T> action) {
-            Iterator.super.forEachRemaining(action);
-        }
-    }
 
     /*
+    ITERATOR
     List Iterator Implementation that offers increased functionality over the standard Iterator
      */
-    private class ListIter implements ListIterator<T>{
+    private class ListIter implements ListIterator<T>, DiceIterator<T>{
         //Attributes
         private Cursor cursor;
-        //Mod Count
+
         private int expectedModCount;
+
+        private LastOperation lastOperation = LastOperation.FIRST;
 
         //Constructors
         public ListIter(){
@@ -296,10 +258,18 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
         public ListIter(int startIndex){
             ArrayList.this.checkIndexRange(startIndex);
             this.cursor = new Cursor(startIndex -1, startIndex);
-            this.expectedModCount = ArrayList.this.modCount.get();
         }
 
         //Methods
+        public void add(T value){
+            this.checkModification();
+            if(this.lastOperation == LastOperation.MODIFIED) throw new IllegalStateException("Element has already been modified since last next() call");
+
+            ArrayList.this.add(this.cursor.getNextIndex(), value);
+            this.cursor.moveForward();
+            this.expectedModCount++;
+            this.lastOperation = LastOperation.MODIFIED;
+        }
 
         public boolean hasNext(){
             return this.cursor.nextIndex < ArrayList.this.size();
@@ -311,11 +281,16 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
         }
 
         public T next(){
+            this.checkModification();
             if(!this.hasNext()) throw new NoSuchElementException("The Collection has no next Element");
+            if(this.lastOperation == LastOperation.FIRST) expectedModCount = ArrayList.this.modCount.get();
 
             this.cursor.moveForward();
 
+            this.lastOperation = LastOperation.NEXT;
+
             return ArrayList.this.get(cursor.getPreviousIndex());
+
         }
         
         public int nextIndex(){
@@ -323,9 +298,13 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
         }
 
         public T previous(){
+            this.checkModification();
             if(!this.hasPrevious()) throw new NoSuchElementException("The Collection has no previous Element");
+            if(this.lastOperation == LastOperation.FIRST) expectedModCount = ArrayList.this.modCount.get();
 
             this.cursor.moveBackward();
+
+            this.lastOperation = LastOperation.PREVIOUS;
 
             return ArrayList.this.get(cursor.getNextIndex());
         }
@@ -334,6 +313,69 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
             return this.cursor.getPreviousIndex();
         }
 
+        public void remove(){
+            this.checkModification();
+            if(this.lastOperation == LastOperation.MODIFIED) throw new IllegalStateException("Element has already been modified since last next() call");
+
+            if(this.lastOperation == LastOperation.NEXT){
+                ArrayList.this.remove(this.cursor.getPreviousIndex());
+
+            }else if(this.lastOperation == LastOperation.PREVIOUS){
+                ArrayList.this.remove(this.cursor.getNextIndex());
+            }
+
+            this.lastOperation = LastOperation.MODIFIED;
+            this.expectedModCount++;
+        }
+
+        public void set(T value){
+            this.checkModification();
+            if(this.lastOperation == LastOperation.MODIFIED) throw new IllegalStateException("Element has already been modified since last next() call");
+
+            if(this.lastOperation == LastOperation.NEXT){
+                ArrayList.this.baseArray[this.cursor.previousIndex] = value;
+            }else if(this.lastOperation == LastOperation.PREVIOUS){
+                ArrayList.this.baseArray[this.cursor.nextIndex] = value;
+            }
+
+            this.lastOperation = LastOperation.MODIFIED;
+            this.expectedModCount++;
+            ArrayList.this.modCount.incrementAndGet();
+
+        }
+
+        public void modify(UnaryOperator<T> operator){
+            this.checkModification();
+            if(this.lastOperation == LastOperation.MODIFIED) throw new IllegalStateException("Element has already been modified since last next() call");
+
+            if(this.lastOperation == LastOperation.NEXT){
+                ArrayList.this.baseArray[this.cursor.previousIndex] = operator.apply(ArrayList.this.baseArray[this.cursor.previousIndex]);
+            }else if(this.lastOperation == LastOperation.PREVIOUS){
+                ArrayList.this.baseArray[this.cursor.nextIndex] = operator.apply(ArrayList.this.baseArray[this.cursor.previousIndex]);
+            }
+
+            
+            this.lastOperation = LastOperation.MODIFIED;
+            this.expectedModCount++;
+            ArrayList.this.modCount.incrementAndGet();
+        }
+        /*
+         * Internal Methods
+         */
+
+        /*
+        Checks the if the List has been modified in an unchecked manner while the Iterator is active.
+        Compares the expected Modification count with the current modCount.
+         */
+        private void checkModification(){
+            if(this.expectedModCount != ArrayList.this.modCount.get())
+                throw new ConcurrentModificationException("ArrayList has been Modified");
+
+        }
+
+        enum LastOperation{NEXT, PREVIOUS, MODIFIED, FIRST}
+        
+        }
         /*
          * Internal Cursor Class that saves both the previous and the succeeding position
          */
@@ -369,4 +411,3 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
         }
     }
 
-}
