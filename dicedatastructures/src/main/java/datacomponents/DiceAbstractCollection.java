@@ -1,6 +1,7 @@
 package datacomponents;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -121,18 +122,18 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
     public abstract T get(int index);
 
     public T[] getAll(Predicate<T> filter){
-        T[] resultArray = this.castTypeArray(this.size());
-        int i = 0;
-
-        for(T value: this){
+        var result = new LinkedList<T>(); 
+        
+        for(T value:this){
             if(filter.test(value)){
-                resultArray[i++] = value;
+                result.add(value);
             }
         }
-        return resultArray;
+
+        return this.castTypeArray(result.toArray());
     }
     /**
-     * Searches for an Object in O(n) linear search
+     * Searches for an Object in O(n) linear search. Override for more efficient time complexity
      * @param obj element whose presence in this collection is to be tested
      * @return true if at least one instance of obj is an element of the ArrayList
      */
@@ -198,5 +199,11 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
     protected T[] castTypeArray(int size){
     
         return (T[]) new Object[size];
+    }
+
+    @SuppressWarnings ("unchecked")
+    protected T[] castTypeArray(Object[] convertArray){
+
+        return(T[])convertArray;
     }
 }
