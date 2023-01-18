@@ -214,13 +214,20 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
 
     public abstract Iterator<T> iterator();
 
-    public abstract DiceIterator diceIterator();
+    public abstract DiceIterator<T> diceIterator();
 
     /**
      * Internal Methods
      */
+
+    /**
+     * Method for all DiceDataStructures to create generic T[] Arrays.
+     * @param size The size of the new generic Arrray
+     * @return Generic Array of the specififed size
+     */
     @SuppressWarnings ("unchecked")
     protected T[] castTypeArray(int size){
+        if(size<0) throw new IllegalArgumentException("Passed Array Capacity is smaller than zero");
     
         return (T[]) new Object[size];
     }
@@ -233,7 +240,7 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
     /**
      * Extension of the Iterator interface that provides additional Functionality. Used for functionality in all DiceDataStructures within the framework.
      */
-    private abstract class DiceIterator implements Iterator<T>{
+        public interface DiceIterator<T> extends Iterator<T>{
 
         public abstract boolean hasNext();
 

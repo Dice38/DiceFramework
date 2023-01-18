@@ -11,7 +11,7 @@ import java.util.function.UnaryOperator;
 
 public class ArrayList<T> extends DiceAbstractCollection<T> {
     //Static Parameters
-    public static int standardInitialCapacity = 10;
+    public static int defaultInitialCapacity = 10;
     public static float resizeFactor = (float)0.5;
     public static AccessType accessType = AccessType.RANDOM;
     //Attributes
@@ -20,14 +20,14 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
     private int size = 0;
 
     /*
-    Constructors offering different options for initialization
+    Constructors
      */
     public ArrayList(int initialCapacity){this.baseArray = this.castArray(initialCapacity);}
 
-    public ArrayList(){this(standardInitialCapacity);}
+    public ArrayList(){this(defaultInitialCapacity);}
 
     public ArrayList(Collection<? extends T> collection){
-        this(standardInitialCapacity);
+        this(collection.size());
         this.addAll(collection);
     }
 
@@ -55,7 +55,7 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
             this.size++;
         }
         this.modCount.incrementAndGet();
-        this.checkResize();
+        this.resize();
         return true;
     }
 
@@ -117,13 +117,6 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
     }
 
     /*
-    REPLACING METHODS !!
-     */
-    public void replaceAll(UnaryOperator<T> operator){
-
-    }
-
-    /*
     Non-Modifying Methods that don't change the ArrayList @
      */
 
@@ -140,7 +133,7 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
      */
     public void clear(){
         this.size = 0;
-        this.baseArray = this.castArray(standardInitialCapacity);
+        this.baseArray = this.castTypeArray(defaultInitialCapacity);
     }
 
 
@@ -199,15 +192,6 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
         }
     }
 
-    public String toString(){
-        var iter = this.iterator();
-        var stringBuilderResult = new StringBuilder();
-
-        while(iter.hasNext()){
-            stringBuilderResult.append(iter.next()).append(", ");
-        }
-        return stringBuilderResult.toString();
-    }
 
     /*
     Internal Methods only for use within the class
@@ -216,26 +200,17 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
     /*
     Method that checks whether a resize is necessary and performs it if so
      */
-    private void checkResize(){
+    private void resize(){
+
         if(this.size == this.currentCapacity){
-            T[] array = this.castArray((int)(currentCapacity*1.5));
+
+            T[] array = this.castTypeArray((int)(currentCapacity*1.5));
             System.arraycopy(this.baseArray,0, array, 0, this.size);
             this.baseArray = array;
+            this.currentCapacity = baseArray.length;
         }
     }
 
-    /*
-    Method to cast an Object[] into T[] of the specified capacity
-     */
-    @SuppressWarnings("unchecked")
-    private T[] castArray(int capacity) {
-        if (capacity > 0) {
-            this.currentCapacity = capacity;
-            return (T[]) new Object[capacity];
-        } else {
-            throw new IllegalArgumentException("Passed Array Capacity is " + capacity);
-        }
-    }
 
     /*
     Method to check an Index for Range. If it's outside the bounds of the used ArrayList an Exception is thrown.
@@ -248,7 +223,7 @@ public class ArrayList<T> extends DiceAbstractCollection<T> {
     /*
     Internal Iterator implementation
      */
-    private class Iter implements Iterator<T> {
+    private class Iter implements DiceIterator<T> {
 
         //Attributes
         /*
