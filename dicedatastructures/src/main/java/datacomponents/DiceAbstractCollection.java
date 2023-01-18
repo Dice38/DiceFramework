@@ -1,6 +1,7 @@
 package datacomponents;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
@@ -106,7 +107,14 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
      * UnaryOperator on them and saving the result
      * @param operator Specifies the modification performed on each value T
      */
-    public abstract void replaceAll(UnaryOperator<T> operator);
+    public void modifyAll(UnaryOperator<T> operator){
+        var iter = this.diceIterator();
+
+        while(iter.hasNext()){
+            iter.next();
+            iter.modify(operator);
+        }
+    }
 
     /**
      * Method that performs some modification on all the values in the datastructure that fulfill the condition set
@@ -114,13 +122,25 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
      * @param operator Specifies the modification performed on each value T
      * @param filter Only values that pass this filter are modified by operator
      */
-    public abstract void replaceIf(UnaryOperator<T> operator, Predicate<T> filter);
+    public void modifyIf(UnaryOperator<T> operator, Predicate<T> filter){
+        var iter = this.diceIterator();
+
+        while(iter.hasNext()){
+            if(filter.test(iter.next())){
+                iter.modify(operator);
+            }
+        }
+    }
 
     /*
     OTHER METHODS!
      */
-    public abstract T get(int index);
 
+     /**
+      * Method that gets all elements of the collection to fullfill the condition passed in Predicate
+      * @param filter The conditionary filter
+      * @return Array of all the Elements in the collection that passed the filter
+      */
     public T[] getAll(Predicate<T> filter){
         var result = new LinkedList<T>(); 
         
@@ -192,6 +212,10 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
         return stringBuilder.toString();
     }
 
+    public abstract Iterator<T> iterator();
+
+    public abstract DiceIterator diceIterator();
+
     /**
      * Internal Methods
      */
@@ -205,5 +229,23 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
     protected T[] castTypeArray(Object[] convertArray){
 
         return(T[])convertArray;
+    }
+    /**
+     * Extension of the Iterator interface that provides additional Functionality. Used for functionality in all DiceDataStructures within the framework.
+     */
+    private abstract class DiceIterator implements Iterator<T>{
+
+        public abstract boolean hasNext();
+
+        public abstract T next();
+
+        public abstract void remove();
+
+        /**
+         * Method that modifies the current Element with the operation specified
+         * @param operation The operation applied to the last element returned by next()
+         */
+        public abstract void modify(UnaryOperator<T> operation);
+
     }
 }
