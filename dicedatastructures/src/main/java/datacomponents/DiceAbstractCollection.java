@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
+import java.util.Deque;
 
 public abstract class DiceAbstractCollection<T> implements Collection<T> {
     //Attributes
@@ -72,29 +73,35 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
      * @return True if the ArrayList has been changed as a result of this call.
      */
     public boolean removeIf(Predicate<? super T> filter){
-        int mod = 0;
+        var iter = this.diceIterator();
+        int localMod = 0;
 
-        for (T temp : this) {
-            if (filter.test(temp)) {
-                if(this.remove(temp))mod++;
+        while(iter.hasNext()){
+            if(filter.test(iter.next())){
+                iter.remove();
+                localMod++;
             }
         }
-
-        return mod != 0;
+        return localMod!=0;
     }
 
     /**
-     * Only Retains elements that are also contained in the parameter Collection
+     * Only Retains elements that are also contained in the parameter Collection.
+     * O(n^2) if contains() implements lineal search. O(nlogn) if contains() implements binary search 
      * @param collection collection containing elements to be retained in this collection
      * @return true if the ArrayList changed as a Result of this Method call
      */
     public boolean retainAll(Collection<?> collection){
-        int tempModCount = this.modCount.get();
-        for(Object obj : collection){
-            if(!this.contains(obj)){
-                this.remove(obj);
+        int tempModCount = 0;
+        var iter = this.diceIterator();
+
+        while(iter.hasNext()){
+            if(!(collection.contains(iter.next()))){
+                iter.remove();
+                tempModCount++;
             }
         }
+        
         return tempModCount != this.modCount.get();
     }
 
