@@ -1,7 +1,6 @@
 package dataalgorithms;
 
 import java.util.Comparator;
-
 public class BinarySearch {
 /*
 Central Implementation of the BinarySearch Algorithm for the whole Module.

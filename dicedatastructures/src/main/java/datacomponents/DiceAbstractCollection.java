@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
-import java.util.Deque;
 
 public abstract class DiceAbstractCollection<T> implements Collection<T> {
     //Attributes
