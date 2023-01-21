@@ -129,11 +129,22 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
     }
 
     public boolean replaceAt(int index, T value){
+        if(this.isReadOnly()) throw new IllegalStateException("Data Structure is ReadOnly");
         this.checkIndexRange(index);
 
         this.baseArray[index] = value;
         this.modCount.incrementAndGet();
         return true;
+    }
+
+    /**
+     * Clears the ArrayList of all elements and resets the capacity to standard capacity
+     */
+    public void clear(){
+        if(this.isReadOnly()) throw new IllegalStateException("Data Structure is ReadOnly");
+        this.size = 0;
+        this.baseArray = this.castTypeArray(defaultInitialCapacity);
+        this.modCount.incrementAndGet();
     }
 
     /*
@@ -146,15 +157,6 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
      */
     public boolean isEmpty(){
         return this.size == 0;
-    }
-
-    /**
-     * Clears the ArrayList of all elements and resets the capacity to standard capacity
-     */
-    public void clear(){
-        this.size = 0;
-        this.baseArray = this.castTypeArray(defaultInitialCapacity);
-        this.modCount.incrementAndGet();
     }
 
 
