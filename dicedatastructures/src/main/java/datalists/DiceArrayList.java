@@ -3,13 +3,15 @@ package datalists;
 import datacomponents.DiceAbstractCollection;
 import java.util.*;
 import java.util.function.UnaryOperator;
+
+import datacomponents.Nullable;
 import internalclasses.ExceptionOutput;
 
 
 public class DiceArrayList<T> extends DiceAbstractCollection<T> {
     //Static Parameters
     public static int defaultInitialCapacity = 10;
-    public static float resizeFactor = (float)0.5;
+    public static float resizeFactor = (float)1.5;
     //Attributes
     private T[] baseArray;
     private int currentCapacity;
@@ -18,21 +20,29 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
     /*
     Constructors
      */
-    public DiceArrayList(int initialCapacity){
+    public DiceArrayList(int initialCapacity, boolean noNullElements){
         this.baseArray = this.castTypeArray(initialCapacity);
         this.currentCapacity = initialCapacity;
+        if(noNullElements) this.nullable = Nullable.NONNULLABLE;
     }
 
-    public DiceArrayList(){this(defaultInitialCapacity);}
+    public DiceArrayList(int initialCapacity){
+        this(initialCapacity, false);
+    }
+    public DiceArrayList(){this(defaultInitialCapacity, false);}
 
     public DiceArrayList(Collection<? extends T> collection){
-        this(collection.size());
+        this(collection.size(), false);
         this.addAll(collection);
+    }
+
+    public DiceArrayList(boolean noNullElements){
+        this(defaultInitialCapacity, true);
     }
 
     @SuppressWarnings("unchecked")
     public DiceArrayList(T ... values){
-        this(values.length*3);
+        this(values.length*3, false);
         Collections.addAll(this, values);
     }
 
@@ -43,10 +53,11 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
 
     /*
     Base Adding Method. All other adding methods use this one to perform the actual adding. Since the ArrayList
-    offeres random access the base adding method is not add(T value) but add(index, value).
+    offers random access the base adding method is not add(T value) but add(index, value).
      */
     public boolean add(int index, T value){
         this.checkIndexRange(index);
+        this.checkAddingException(value);
 
         for(int i = this.size+1; i > index; i-- ){
             this.baseArray[i] = this.baseArray[i-1];
@@ -61,6 +72,7 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
     }
 
     public boolean add(T value){
+        this.checkAddingException(value);
         this.baseArray[this.size()] = value;
         this.size++;
         this.resize();
@@ -81,7 +93,8 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
      * @param index
      * @return
      */
-    public boolean remove(int index){
+    public boolean removeAt(int index){
+        if(this.isReadOnly()) throw new IllegalStateException("DataStructure is ReadOnly");
         this.checkIndexRange(index);
 
         //shift every subsequent element to the left by one
@@ -100,22 +113,15 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
      * @return Returns true if elements have been removed as a consequence of this call
      */
     public boolean remove(Object obj){
+        if(this.isReadOnly()) throw new IllegalStateException("DataStructure is ReadOnly");
+
         var iter = this.iterator();
         boolean bFlag = false;
 
-        if(obj == null){
-            while(iter.hasNext()){
-                if(iter.next() == null){
-                    iter.remove();
-                    bFlag = true;
-                }
-            }
-        }else{
-            while(iter.hasNext()){
-                if(iter.next().equals(obj)){
-                    iter.remove();
-                    bFlag = true;
-                }
+        while(iter.hasNext()){
+            if(diceEquals(iter.next(), obj)){
+                iter.remove();
+                bFlag = true;
             }
         }
 
@@ -223,7 +229,7 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
 
         if(this.size == this.currentCapacity){
 
-            T[] array = this.castTypeArray((int)(currentCapacity*1.5));
+            T[] array = this.castTypeArray((int)(currentCapacity*DiceArrayList.resizeFactor));
             System.arraycopy(this.baseArray,0, array, 0, this.size);
             this.baseArray = array;
             this.currentCapacity = baseArray.length;
@@ -237,6 +243,11 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
     private void checkIndexRange(int index){
         if(index == 0 && this.size == 0) throw new IllegalStateException("ArrayList has no Elements");
         if(index < 0 || index >= this.size) throw new IndexOutOfBoundsException("Index out of Bound at "+index);
+    }
+
+    private void checkAddingException(Object obj){
+        if(this.nullable == Nullable.NONNULLABLE && obj == null) throw new IllegalArgumentException("No null references as Elements allowed");
+        if(this.isReadOnly()) throw new IllegalStateException("List is in Immutable State");
     }
 
 
@@ -326,10 +337,10 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
             if(this.lastOperation == LastOperation.MODIFIED) throw new IllegalStateException("Element has already been modified since last next() call");
 
             if(this.lastOperation == LastOperation.NEXT){
-                DiceArrayList.this.remove(this.cursor.getPreviousIndex());
+                DiceArrayList.this.removeAt(this.cursor.getPreviousIndex());
 
             }else if(this.lastOperation == LastOperation.PREVIOUS){
-                DiceArrayList.this.remove(this.cursor.getNextIndex());
+                DiceArrayList.this.removeAt(this.cursor.getNextIndex());
             }
 
             this.cursor.moveBackward();
@@ -393,7 +404,7 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
             private int previousIndex;
             private int nextIndex;
 
-            //Cunstructor
+            //Constructor
             public Cursor(int previousIndex, int nextIndex){
                 this.previousIndex = previousIndex;
                 this.nextIndex = nextIndex;

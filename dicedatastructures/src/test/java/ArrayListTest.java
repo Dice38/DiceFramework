@@ -16,8 +16,8 @@ public class ArrayListTest {
     @BeforeEach
     void setup(){
         int[] temp = {5,1,100};
-        list = new DiceArrayList<Integer>(1,2,66);
-        secondList = new LinkedList<Integer>();
+        list = new DiceArrayList<>(1,2,66);
+        secondList = new LinkedList<>();
 
         for(int i = 0; i<temp.length; i++){
             secondList.add(temp[i]);
@@ -58,8 +58,8 @@ public class ArrayListTest {
     @Test
     void remove_Element(){
         list.add(null);
-        list.remove(null);
-        assertThat(list.contains(null)).isFalse();
+        list.remove(1);
+        assertThat(list.contains(1)).isFalse();
     }
     @ParameterizedTest
     @ValueSource(ints = {-1, 100})

@@ -1,5 +1,5 @@
 package datacomponents;
 
 public enum ReadOnly {
-    MUTABLE, IMMUTABLE
+    READ_ONLY, READ_WRITE
 }

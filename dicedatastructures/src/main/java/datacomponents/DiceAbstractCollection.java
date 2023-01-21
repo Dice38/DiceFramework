@@ -13,13 +13,27 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
     modCount that counts the number of modifications performed on the datastructure
      */
     protected volatile AtomicInteger modCount = new AtomicInteger(0);
+    /*
+    Enum that shows if the Collection is Sorted. Default is Unsorted
+     */
+    protected Order order = Order.UNSORTED;
+    /*
+    Enum that shows if the Collection allows for null Elements
+     */
+    protected Nullable nullable = Nullable.NULLABLE;
+    /*
+    Enum that shows if the Collection is read only
+     */
+    protected ReadOnly readOnly = ReadOnly.READ_WRITE;
 
     /*
     ADDING METHODS!
-    Methods that perform Adding operations. General operations that rely on a datastructure specific implementation
+    Methods that perform Adding operations. General operations that rely on a Data Structure specific implementation
     of the add(Object) method.
      */
     public abstract boolean add(T value);
+
+
     /**
      * Adds all the elements in a collection
      * @param collection collection containing elements to be added to this collection
@@ -109,7 +123,14 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
      */
 
     /**
-     * Method that replaces all the values in the datastructure by performing the modification specified in the
+     * Method that irreversibly sets the DataStructure to ReadOnly. Once flagged no elements can be modified in any way.
+     */
+    public void setReadOnly(){
+        this.readOnly = ReadOnly.READ_ONLY;
+        this.modCount.incrementAndGet();
+    }
+    /**
+     * Method that replaces all the values in the dataStructure by performing the modification specified in the
      * UnaryOperator on them and saving the result
      * @param operator Specifies the modification performed on each value T
      */
@@ -143,7 +164,7 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
      */
 
      /**
-      * Method that gets all elements of the collection to fullfill the condition passed in Predicate
+      * Method that gets all elements of the collection to fulfill the condition passed in Predicate
       * @param filter The conditionary filter
       * @return Array of all the Elements in the collection that passed the filter
       */
@@ -166,14 +187,8 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
     public boolean contains(Object obj){
         var iter = this.iterator();
 
-        if(obj == null){
-            while(iter.hasNext()){
-                if(iter.next() == null) return true;
-            }
-        }else{
-            while(iter.hasNext()){
-                if(iter.next().equals(obj)) return true;
-            }
+        while(iter.hasNext()){
+            if(this.diceEquals(iter.next(), obj)) return true;
         }
         return false;
     }
@@ -190,11 +205,6 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
         return true;
     }
 
-    /**
-     * Method that returns the number of Elements in the current datastructure
-     * @return Integer representing the number of elements
-     */
-    public abstract int size();
 
     /**
      * Checks if the datastructure contains zero elements
@@ -222,7 +232,41 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
 
     public abstract DiceIterator<T> diceIterator();
 
+    /*
+    META METHODS
+     */
+
     /**
+     * Method that returns the number of Elements in the current datastructure
+     * @return Integer representing the number of elements
+     */
+    public abstract int size();
+
+    /**
+     * Method that checks if the DataStructure is declared readOnly.
+     * @return true if the DataStructure is ReadOnly
+     */
+    public boolean isReadOnly(){
+        return this.readOnly == ReadOnly.READ_ONLY;
+    }
+
+    /**
+     * Method that checks of the DataStructure allows null Elements
+     * @return true if null Elements are allowed
+     */
+    public boolean allowsNullElements(){
+        return this.nullable == Nullable.NULLABLE;
+    }
+
+    /**
+     * Method that checks if the DataStructure is Ordered
+     * @return
+     */
+    public boolean isOrdered(){
+        return this.order == Order.SORTED;
+    }
+
+    /*
      * Internal Methods
      */
 
@@ -242,6 +286,21 @@ public abstract class DiceAbstractCollection<T> implements Collection<T> {
     protected T[] castTypeArray(Object[] convertArray){
 
         return(T[])convertArray;
+    }
+
+    /**
+     * Internal Method to compare two Objects. Necessary to avoid difficulty if one of the Objects is null
+     * @param firstValue
+     * @param secondValue
+     * @return Returns true if both Values are null or if equals() returns true.
+     */
+    protected boolean diceEquals(Object firstValue, Object secondValue){
+        if(firstValue == null || secondValue == null){
+            return firstValue == secondValue;
+        }
+
+        return firstValue.equals(secondValue);
+
     }
     /**
      * Extension of the Iterator interface that provides additional Functionality. Used for functionality in all DiceDataStructures within the framework.
