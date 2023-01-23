@@ -1,5 +1,6 @@
 package dataalgorithms;
 
+import java.util.Collection;
 import java.util.Comparator;
 public class BinarySearch {
 /*
@@ -18,7 +19,11 @@ Central Implementation of the BinarySearch Algorithm for the whole Module.
      * @param <T> Any Type that implements Comparable
      */
    public static<T extends Comparable<T>> int binarySearch(T[] array, T value){
-       return binarySearchIndex(array, value, 0, array.length,Comparator.naturalOrder());
+       return binarySearchIndex(array, value, 0, array.length-1,Comparator.naturalOrder());
+   }
+
+   public static<T extends  Comparable<T>> int binarySearch(T[] array, T value, Comparator<T> comparator){
+       return binarySearchIndex(array, value,0, array.length-1, comparator);
    }
 
 
