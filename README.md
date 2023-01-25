@@ -18,6 +18,7 @@ modification happens by using DiceIterator for all the methods the datastructure
 a NoNullObject wrapper for all Datastructures would be a better idea.
 - The datastructures save information about whether they are sorted or not (If their structure allows for that differentation). If they are in a sorted states
 operations such as removal of specific elements, retrieving elements and so on use a binarysearch instead of lineal traversal.
+- This project uses Java Modules (Java 9) and it intends to offer different datastructures through a service like structure (tho yet to be implemented)
 
 ### Project Meta
 -In the nature of keeping a complete history I will opt to merge topic branches instead of rebasing them.
@@ -31,8 +32,9 @@ be written.
 
 ## FUTURE
 I am especially looking forward to construct graph like datastructures and play around with their functionality. For educational purposes I also want to implement as 
-synchronizing wrapper class that allows for save multithreaded interaction with a specific datastructure by using Semaphors. For tree structures I intend to 
+synchronizing wrapper class that allows for save multithreaded interaction with a specific datastructure by using Semaphores. For tree structures I intend to 
 have the datastructure keep track of the number of modification and element retrieval operation and use that data to switch between an AVL balancing tree and a 
 black red balancing tree.
+
 
 Thx for reading all this, tho I doubt anyone ever will ...;-)
