@@ -114,6 +114,7 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
      */
     public boolean remove(Object obj){
         if(this.isReadOnly()) throw new IllegalStateException("DataStructure is ReadOnly");
+        if(this.size == 0) return false;
 
         var iter = this.iterator();
         boolean bFlag = false;
@@ -270,11 +271,7 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
             this(0);
         }
         public ListIter(int startIndex){
-            try{
             DiceArrayList.this.checkIndexRange(startIndex);
-            }catch(IllegalStateException ex){
-                ExceptionOutput.printToConsole(ex.toString());
-            }
 
             this.cursor = new Cursor(startIndex -1, startIndex);
         }
@@ -381,6 +378,18 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
             this.expectedModCount++;
             DiceArrayList.this.modCount.incrementAndGet();
         }
+
+        public void goToFirst(){
+            this.checkModification();
+            this.cursor.previousIndex = -1;
+            this.cursor.nextIndex = 0;
+        }
+
+        public void goToLast(){
+            this.checkModification();
+            this.cursor.previousIndex = DiceArrayList.this.size()-1;
+            this.cursor.nextIndex = DiceArrayList.this.size();
+        }
         /*
          * Internal Methods
          */
@@ -401,7 +410,7 @@ public class DiceArrayList<T> extends DiceAbstractCollection<T> {
         /*
          * Internal Cursor Class that saves both the previous and the succeeding position
          */
-        private class Cursor{
+        private static class Cursor{
             //Attributes
             private int previousIndex;
             private int nextIndex;
