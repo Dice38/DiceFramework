@@ -1,3 +1,4 @@
 module dicedatastructures {
-    exports dataalgorithms;
+   exports datalists;
+   exports  datacomponents;
 }
