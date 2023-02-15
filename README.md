@@ -22,13 +22,14 @@ a NoNullObject wrapper for all Datastructures would be a better idea.
 One Implementation of a SkipList that offers the usual time complexity. Since it is a sorted Structure it doesn't allow for random modification. DiceIterator can therefore not be used.
 
 ### Project Meta
--In the nature of keeping a complete history I will opt to merge topic branches instead of rebasing them.
+- In the nature of keeping a complete history I will opt to merge topic branches instead of rebasing them.
+- Since this is an educational effort, all implementations are largely my own produce with as few references as possible. Therefore they might not always be optimal. 
 
 
 
 ## FUTURE
 I am especially looking forward to construct graph like datastructures and play around with their functionality. For educational purposes I also want to implement as 
-synchronizing wrapper class that allows for save multithreaded interaction with a specific datastructure by using Semaphores. 
+synchronizing wrapper class that allows for save multithreaded interaction with a specific datastructure by using Semaphores.
 
 
 Thx for reading all this, tho I doubt anyone ever will ...;-)
