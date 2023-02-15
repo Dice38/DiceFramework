@@ -8,6 +8,8 @@ public class DiceSkipList<T  extends Comparable<? super T>> {
     public final static float layerProbability = 0.5f;
     Comparator<T> comparator;
     SkipNode head = new SkipNode(null);
+    private int size = 0;
+    private int numberLayers = 1;
     //Constructors
     public DiceSkipList(){
         this.comparator = Comparator.naturalOrder();
@@ -27,14 +29,16 @@ public class DiceSkipList<T  extends Comparable<? super T>> {
         while(random.nextFloat() < 0.5){
             if(path.isEmpty()){
                 head = head.addLayer();
-                link(head, insertNode.addLayer());
-
+                insertNode = insertNode.addLayer();
+                this.numberLayers++;
+                link(head, insertNode);
             }
             else{
-                link(path.pop(), insertNode.addLayer());
+                insertNode = insertNode.addLayer();
+                link(path.pop(), insertNode);
             }
         }
-
+        this.size++;
         return true;
     }
 
@@ -60,8 +64,17 @@ public class DiceSkipList<T  extends Comparable<? super T>> {
         if(!path.peek().getValue().equals(value)) return false;
 
         unlink(path.pop());
+        this.size--;
         return true;
 
+    }
+
+    public int size(){
+        return this.size;
+    }
+
+    public int getNumberLayers(){
+        return this.numberLayers;
     }
     private Stack<SkipNode> getPath(T key){
         var current = this.head;
